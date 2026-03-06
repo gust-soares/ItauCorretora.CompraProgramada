@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/Itens de Solução/">
+    <File Path="docker-compose.yml" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="ItauCorretora.Api/ItauCorretora.Api.csproj" Id="d4a33edf-bf72-4b45-947f-9a294738a830">
+      <BuildDependency Project="ItauCorretora.Application/ItauCorretora.Application.csproj" />
+      <BuildDependency Project="ItauCorretora.Infrastructure/ItauCorretora.Infrastructure.csproj" />
+    </Project>
+    <Project Path="ItauCorretora.Application/ItauCorretora.Application.csproj" Id="2f6a2099-8cb7-4085-8e2a-b7a6e4eee440">
+      <BuildDependency Project="ItauCorretora.Domain/ItauCorretora.Domain.csproj" />
+    </Project>
+    <Project Path="ItauCorretora.Domain/ItauCorretora.Domain.csproj" Id="38c2e547-e91d-436a-9a1d-596016b1e71a" />
+    <Project Path="ItauCorretora.Infrastructure/ItauCorretora.Infrastructure.csproj" Id="17f52588-47d1-4bdb-87b8-60c63f809f4a">
+      <BuildDependency Project="ItauCorretora.Application/ItauCorretora.Application.csproj" />
+      <BuildDependency Project="ItauCorretora.Domain/ItauCorretora.Domain.csproj" />
+    </Project>
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="ItauCorretora.Tests/ItauCorretora.Tests.csproj" Id="495a4237-f0bc-4fc5-8bac-64554ce1bb0a">
+      <BuildDependency Project="ItauCorretora.Api/ItauCorretora.Api.csproj" />
+      <BuildDependency Project="ItauCorretora.Application/ItauCorretora.Application.csproj" />
+      <BuildDependency Project="ItauCorretora.Domain/ItauCorretora.Domain.csproj" />
+      <BuildDependency Project="ItauCorretora.Infrastructure/ItauCorretora.Infrastructure.csproj" />
+    </Project>
+  </Folder>
+</Solution>
