@@ -1,46 +1,45 @@
-name: CI/CD Pipeline - Itaú Corretora
+name: CI/CD Pipeline - Itau Corretora
 
 on:
-push:
-branches: [ "main" ]
-pull_request:
-branches: [ "main" ]
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-build-and-test:
-runs-on: ubuntu-latest
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-steps:
-- name: Baixar o código
-  uses: actions/checkout@v4
+      - name: Restore dependencies
+        run: dotnet restore
 
-- name: Configurar o .NET 8
-  uses: actions/setup-dotnet@v4
-  with:
-    dotnet-version: '8.0.x'
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
 
-- name: Restaurar pacotes
-  run: dotnet restore
+      - name: Run tests with coverage
+        run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage"
 
-- name: Compilar a solução
-  run: dotnet build --no-restore --configuration Release
+      - name: Install ReportGenerator
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
 
-- name: Rodar testes com cobertura
-  run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage"
+      - name: Add .NET tools to PATH
+        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
-- name: Instalar ReportGenerator
-  run: dotnet tool install -g dotnet-reportgenerator-globaltool
+      - name: Generate HTML coverage report
+        run: reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coverage-report -reporttypes:Html
 
-- name: Adicionar .NET tools ao PATH
-  run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-
-- name: Gerar relatório HTML de cobertura
-  run: reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coverage-report -reporttypes:Html
-
-- name: Upload relatório HTML
-  uses: actions/upload-artifact@v4
-  with:
-    name: coverage-report-html
-    path: coverage-report
-
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage-report
