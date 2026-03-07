@@ -25,17 +25,32 @@ public class CustodiaFilhote
 
         decimal valorTotalAnterior = Quantidade * PrecoMedio;
         decimal valorTotalNovo = novaQuantidade * precoCompra;
-
         int quantidadeTotal = Quantidade + novaQuantidade;
+
         PrecoMedio = (valorTotalAnterior + valorTotalNovo) / quantidadeTotal;
         Quantidade = quantidadeTotal;
     }
 
     public void AbaterVenda(int quantidadeVendida)
     {
+        if (quantidadeVendida <= 0)
+            throw new InvalidOperationException("Quantidade vendida deve ser positiva.");
+
         if (quantidadeVendida > Quantidade)
             throw new InvalidOperationException("Saldo insuficiente na custódia.");
 
         Quantidade -= quantidadeVendida;
+
+        if (Quantidade == 0)
+            PrecoMedio = 0m;
+    }
+
+    public void Recalcular(IEnumerable<(int Quantidade, decimal Preco)> compras)
+    {
+        Quantidade = 0;
+        PrecoMedio = 0m;
+
+        foreach (var (qtd, preco) in compras)
+            AdicionarCompra(qtd, preco);
     }
 }

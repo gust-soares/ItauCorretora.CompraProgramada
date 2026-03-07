@@ -23,6 +23,7 @@ public class Cliente
         ValorMensalAporte = valorMensalAporte;
         Ativo = true;
         DataAdesao = DateTime.UtcNow;
+        this.ContaGrafica = new ContaGrafica(this.Id);
     }
 
     public void AlterarValorAporte(decimal novoValor)

@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ItauCorretora.Infrastructure\ItauCorretora.Infrastructure.csproj" />
+    <ProjectReference Include="..\ItauCorretora.Application\ItauCorretora.Application.csproj" />
   </ItemGroup>
 
 </Project>
