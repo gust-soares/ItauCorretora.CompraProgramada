@@ -1,0 +1,174 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Cliente - Itaú Corretora</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: { colors: { itau: { orange: '#ec7000', dark: '#1e1e1e', light: '#f4f4f4' } } }
+            }
+        }
+    </script>
+</head>
+<body class="bg-itau-light text-gray-800 font-sans min-h-screen">
+    <div id="app">
+        <header class="bg-itau-dark text-white p-4 shadow-md border-b-4 border-itau-orange">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold tracking-tight text-itau-orange">Itaú <span class="text-white">Corretora</span></h1>
+                <span class="text-sm bg-gray-700 px-3 py-1 rounded-full">Painel de Compra Programada</span>
+            </div>
+        </header>
+
+        <main class="container mx-auto mt-8 px-4">
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8 max-w-2xl mx-auto">
+                <h2 class="text-lg font-semibold mb-4 text-itau-dark">Consultar Posição da Carteira</h2>
+                <div class="flex gap-4">
+                    <input v-model="clienteId" type="text" placeholder="Cole o ID (GUID) do Cliente aqui..."
+                           class="flex-1 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-itau-orange">
+                    <button @click="buscarCarteira" :disabled="loading"
+                            class="bg-itau-orange text-white px-6 py-2 rounded-md hover:bg-orange-600 transition disabled:opacity-50 font-semibold">
+                        {{ loading ? 'Buscando...' : 'Consultar' }}
+                    </button>
+                </div>
+                <p v-if="erro" class="text-red-500 mt-3 text-sm">{{ erro }}</p>
+            </div>
+
+            <div v-if="carteira" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+                <div class="col-span-1 space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h3 class="text-sm text-gray-500 uppercase font-semibold mb-1">Investidor</h3>
+                        <p class="text-xl font-bold text-itau-dark">{{ carteira.nomeCliente }}</p>
+                        <p class="text-sm text-gray-500 mt-1">CPF: {{ formatarCpf(carteira.cpf) }}</p>
+                    </div>
+
+                    <div class="bg-itau-dark p-6 rounded-lg shadow-md text-white border-l-4 border-itau-orange">
+                        <h3 class="text-sm text-gray-400 uppercase font-semibold mb-1">Patrimônio Total</h3>
+                        <p class="text-3xl font-bold">R$ {{ formatarMoeda(carteira.totalInvestido) }}</p>
+                    </div>
+                </div>
+
+                <div class="col-span-1 md:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col md:flex-row gap-8 items-center">
+                    <div class="flex-1 w-full">
+                        <h3 class="text-lg font-semibold mb-4 text-itau-dark">Custódia Atual</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b-2 border-gray-200 text-gray-600 text-sm">
+                                        <th class="pb-2">Ativo</th>
+                                        <th class="pb-2 text-right">Qtd</th>
+                                        <th class="pb-2 text-right">Preço Médio</th>
+                                        <th class="pb-2 text-right">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="ativo in carteira.ativos" :key="ativo.ticker" class="border-b border-gray-100 hover:bg-gray-50">
+                                        <td class="py-3 font-semibold text-itau-orange">{{ ativo.ticker }}</td>
+                                        <td class="py-3 text-right">{{ ativo.quantidade }}</td>
+                                        <td class="py-3 text-right">R$ {{ formatarMoeda(ativo.precoMedio) }}</td>
+                                        <td class="py-3 text-right font-medium">R$ {{ formatarMoeda(ativo.valorTotal) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="w-full md:w-64 h-64 flex-shrink-0">
+                        <canvas id="graficoCarteira"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        let chartInstance = null;
+
+        createApp({
+            data() {
+                return {
+                    clienteId: '',
+                    carteira: null,
+                    loading: false,
+                    erro: ''
+                }
+            },
+            methods: {
+                async buscarCarteira() {
+                    if (!this.clienteId) {
+                        this.erro = "Por favor, insira o ID do cliente."; return;
+                    }
+
+                    this.loading = true;
+                    this.erro = '';
+                    this.carteira = null;
+
+                    try {
+                        const response = await fetch(`/api/Carteira/${this.clienteId}/posicao`);
+
+                        if (!response.ok) {
+                            if(response.status === 404) throw new Error("Cliente não encontrado ou sem saldo investido.");
+                            throw new Error("Erro de comunicação com a API.");
+                        }
+
+                        this.carteira = await response.json();
+
+                        // Atualiza o gráfico logo após a renderização do Vue
+                        this.$nextTick(() => {
+                            this.renderizarGrafico();
+                        });
+
+                    } catch (err) {
+                        this.erro = err.message;
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                renderizarGrafico() {
+                    const ctx = document.getElementById('graficoCarteira');
+                    if(chartInstance) chartInstance.destroy(); // Destrói o gráfico anterior se existir
+
+                    const labels = this.carteira.ativos.map(a => a.ticker);
+                    const data = this.carteira.ativos.map(a => a.valorTotal);
+
+                    // Cores bonitas para o gráfico
+                    const backgroundColors = ['#ec7000', '#1e1e1e', '#4b5563', '#9ca3af', '#f97316', '#fb923c'];
+
+                    chartInstance = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: data,
+                                backgroundColor: backgroundColors,
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
+                        }
+                    });
+                },
+                formatarMoeda(valor) {
+                    return parseFloat(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                },
+                formatarCpf(cpf) {
+                    if(!cpf) return '';
+                    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
