@@ -12,6 +12,8 @@ using HealthChecks.UI.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using ItauCorretora.Application.Queries;
+using ItauCorretora.Infrastructure.Queries;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -23,8 +25,9 @@ try
     Log.Information("Iniciando a API Compra Programada Itaú...");
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Host.UseSerilog(); 
+    builder.Host.UseSerilog();
 
+    builder.Services.AddScoped<ICarteiraQuery, CarteiraQuery>();
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
