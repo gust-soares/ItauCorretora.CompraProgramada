@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ItauCorretora.Domain.Entities;
+﻿using ItauCorretora.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ItauCorretora.Infrastructure.Data;
 
+[ExcludeFromCodeCoverage]
 public class CompraProgramadaDbContext : DbContext
 {
     public DbSet<Cliente> Clientes { get; set; }

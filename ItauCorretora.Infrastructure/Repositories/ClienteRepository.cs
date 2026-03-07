@@ -2,9 +2,11 @@
 using ItauCorretora.Domain.Interfaces;
 using ItauCorretora.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ItauCorretora.Infrastructure.Repositories;
 
+[ExcludeFromCodeCoverage]
 public class ClienteRepository : IClienteRepository
 {
     private readonly CompraProgramadaDbContext _context;

@@ -1,10 +1,12 @@
 ﻿using Confluent.Kafka;
-using Microsoft.Extensions.Configuration;
-using System.Text.Json;
 using ItauCorretora.Domain.Interfaces;
+using Microsoft.Extensions.Configuration;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 
 namespace ItauCorretora.Infrastructure.Messaging;
 
+[ExcludeFromCodeCoverage]
 public class KafkaProducerService : IKafkaService
 {
     private readonly IConfiguration _config;

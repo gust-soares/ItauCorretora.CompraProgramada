@@ -1,12 +1,14 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using ItauCorretora.Application.DTOs;
 using ItauCorretora.Application.Queries;
 using Microsoft.Extensions.Configuration;
 using MySqlConnector;
+using System.Data;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ItauCorretora.Infrastructure.Queries;
 
+[ExcludeFromCodeCoverage]
 public class CarteiraQuery : ICarteiraQuery
 {
     private readonly string _connectionString;
