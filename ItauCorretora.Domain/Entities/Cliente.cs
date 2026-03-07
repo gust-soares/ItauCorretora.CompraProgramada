@@ -34,6 +34,13 @@ public class Cliente
         ValorMensalAporte = novoValor;
     }
 
+    public void VincularContaGrafica(ContaGrafica contaGrafica)
+    {
+        if (contaGrafica == null)
+            throw new ArgumentNullException(nameof(contaGrafica), "A conta gráfica não pode ser nula.");
+
+        ContaGrafica = contaGrafica;
+    }
     public void CancelarAdesao()
     {
         Ativo = false;

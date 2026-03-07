@@ -21,6 +21,7 @@ builder.Services.AddScoped<AderirProdutoUseCase>();
 builder.Services.AddScoped<IB3ParserService, B3ParserService>();
 builder.Services.AddScoped<ProcessarInvestimentoUseCase>();
 builder.Services.AddScoped<IKafkaService, KafkaProducerService>();
+builder.Services.AddScoped<ProcessarRebalanceamentoUseCase>();
 
 var app = builder.Build();
 

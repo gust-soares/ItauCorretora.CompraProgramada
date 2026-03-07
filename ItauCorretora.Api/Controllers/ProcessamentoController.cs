@@ -1,4 +1,5 @@
 ﻿using ItauCorretora.Application.UseCases;
+using ItauCorretora.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ItauCorretora.Api.Controllers;
@@ -30,5 +31,25 @@ public class ProcessamentoController : ControllerBase
         {
             return StatusCode(500, new { erro = $"Falha no processamento: {ex.Message}" });
         }
+    }
+
+    [HttpPost("executar-rebalanceamento")]
+    public async Task<IActionResult> ExecutarRebalanceamento(
+        [FromServices] ProcessarRebalanceamentoUseCase useCase)
+    {
+        var novaCesta = new List<RecomendacaoAcao>
+        {
+            new("YDUQ3T", 0.10m), // Caiu de 20% para 10%
+            new("WIZC3T", 0.20m),
+            new("WHRL4T", 0.20m),
+            new("ITUB4",  0.30m), // Subiu de 20% para 30%
+            new("PETR4",  0.20m)  // Nova ação
+        };
+
+        string caminhoArquivo = @"C:\Users\gusta\source\repos\ItauCorretora.CompraProgramada\ItauCorretora.Infrastructure\Data\COTAHIST_D05032026.TXT";
+
+        await useCase.ExecutarAsync(caminhoArquivo, novaCesta);
+
+        return Ok(new { Mensagem = "Rebalanceamento e Apuração de IR executados com sucesso!" });
     }
 }

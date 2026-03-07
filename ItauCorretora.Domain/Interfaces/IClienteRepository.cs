@@ -9,6 +9,7 @@ public interface IClienteRepository
     Task<List<Cliente>> ListarAtivosAsync();
     Task SalvarAlteracoesAsync();
 
+    Task<List<CustodiaFilhote>> ObterCustodiaPorContaAsync(Guid contaGraficaId);
     Task<int> AtualizarCustodiaAsync(Guid contaGraficaId, string ticker, int quantidade, decimal precoMedio);
 
     Task InserirCustodiaAsync(Guid contaGraficaId, string ticker, int quantidade, decimal precoMedio);

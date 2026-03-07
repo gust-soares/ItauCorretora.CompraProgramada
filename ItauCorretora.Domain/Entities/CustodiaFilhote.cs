@@ -31,18 +31,26 @@ public class CustodiaFilhote
         Quantidade = quantidadeTotal;
     }
 
-    public void AbaterVenda(int quantidadeVendida)
+    public (decimal ValorArrecadado, decimal LucroApurado) RegistrarVenda(int quantidadeVendida, decimal precoVenda)
     {
         if (quantidadeVendida <= 0)
-            throw new InvalidOperationException("Quantidade vendida deve ser positiva.");
+            throw new InvalidOperationException("A quantidade vendida deve ser positiva.");
 
         if (quantidadeVendida > Quantidade)
-            throw new InvalidOperationException("Saldo insuficiente na custódia.");
+            throw new InvalidOperationException($"Saldo insuficiente para venda de {Ticker}. Possui {Quantidade}, tentou vender {quantidadeVendida}.");
+
+        decimal valorArrecadado = quantidadeVendida * precoVenda;
+
+        decimal lucroApurado = (precoVenda - PrecoMedio) * quantidadeVendida;
 
         Quantidade -= quantidadeVendida;
 
         if (Quantidade == 0)
+        {
             PrecoMedio = 0m;
+        }
+
+        return (valorArrecadado, lucroApurado);
     }
 
     public void Recalcular(IEnumerable<(int Quantidade, decimal Preco)> compras)

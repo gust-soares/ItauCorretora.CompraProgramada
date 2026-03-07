@@ -54,4 +54,11 @@ public class ClienteRepository : IClienteRepository
         await _context.CustodiasFilhotes.AddAsync(custodia);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<List<CustodiaFilhote>> ObterCustodiaPorContaAsync(Guid contaGraficaId)
+    {
+        return await _context.CustodiasFilhotes
+            .Where(c => c.ContaGraficaId == contaGraficaId)
+            .ToListAsync();
+    }
 }
