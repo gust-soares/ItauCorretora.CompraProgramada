@@ -32,6 +32,7 @@ try
 
     builder.Services.AddScoped<ICarteiraQuery, CarteiraQuery>();
     builder.Services.AddControllers();
+    builder.Services.AddScoped<IB3ParserService, B3ParserService>();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 

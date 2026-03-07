@@ -21,10 +21,10 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ItauCorretora.Domain\ItauCorretora.Domain.csproj" />
-    <ProjectReference Include="..\ItauCorretora.Application\ItauCorretora.Application.csproj" />
-    <ProjectReference Include="..\ItauCorretora.Api\ItauCorretora.Api.csproj" />
-  </ItemGroup>
+ <ItemGroup>
+	<ProjectReference Include="..\..\src\ItauCorretora.Application\ItauCorretora.Application.csproj" />
+	<ProjectReference Include="..\..\src\ItauCorretora.Domain\ItauCorretora.Domain.csproj" />
+	<ProjectReference Include="..\..\src\ItauCorretora.Infrastructure\ItauCorretora.Infrastructure.csproj" />
+ </ItemGroup>
 
 </Project>
