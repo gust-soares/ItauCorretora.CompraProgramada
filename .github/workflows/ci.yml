@@ -33,12 +33,13 @@ jobs:
       - name: Run tests with coverage
         run: >
           dotnet test tests/ItauCorretora.Tests/ItauCorretora.Tests.csproj 
-          --no-build 
           --configuration Release 
-          --collect:"XPlat Code Coverage"
-          -- 
-          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
-          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[ItauCorretora.*]*"
+          --collect:"XPlat Code Coverage" 
+          --results-directory ./tests/ItauCorretora.Tests/TestResults
+          /p:CollectCoverage=true 
+          /p:CoverletOutputFormat=cobertura 
+          /p:Include="[ItauCorretora.Infrastructure]*" 
+          /p:CopyLocalLockFileAssemblies=true
 
       - name: Install ReportGenerator
         run: dotnet tool install -g dotnet-reportgenerator-globaltool
