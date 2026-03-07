@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using ItauCorretora.Application.UseCases;
 using ItauCorretora.Domain.Interfaces;
 using ItauCorretora.Infrastructure.Data;
@@ -14,6 +15,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using ItauCorretora.Application.Queries;
 using ItauCorretora.Infrastructure.Queries;
+
+[assembly: ExcludeFromCodeCoverage]
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()

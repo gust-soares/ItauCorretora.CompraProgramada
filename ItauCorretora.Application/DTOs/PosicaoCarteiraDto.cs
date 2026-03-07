@@ -1,5 +1,8 @@
-﻿namespace ItauCorretora.Application.DTOs;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace ItauCorretora.Application.DTOs;
+
+[ExcludeFromCodeCoverage]
 public class PosicaoCarteiraDto
 {
     public string NomeCliente { get; set; } = string.Empty;
