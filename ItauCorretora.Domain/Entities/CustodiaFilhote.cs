@@ -21,7 +21,11 @@ public class CustodiaFilhote
 
     public void AdicionarCompra(int novaQuantidade, decimal precoCompra)
     {
-        if (novaQuantidade <= 0 || precoCompra <= 0) return;
+        if (novaQuantidade <= 0)
+            throw new ArgumentException("A quantidade deve ser maior que zero.");
+
+        if (precoCompra <= 0)
+            throw new ArgumentException("O preço deve ser maior que zero.");
 
         decimal valorTotalAnterior = Quantidade * PrecoMedio;
         decimal valorTotalNovo = novaQuantidade * precoCompra;

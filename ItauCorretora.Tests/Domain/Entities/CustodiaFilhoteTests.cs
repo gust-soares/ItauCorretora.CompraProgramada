@@ -55,4 +55,30 @@ public class CustodiaFilhoteTests
         acao.Should().Throw<InvalidOperationException>()
             .WithMessage("*Saldo insuficiente*");
     }
+
+    [Fact(DisplayName = "Não deve permitir venda de quantidade maior do que a disponível")]
+    public void RegistrarVenda_QuantidadeInsuficiente_DeveLancarExcecao()
+    {
+        var custodia = new CustodiaFilhote(Guid.NewGuid(), "ITUB4");
+        custodia.AdicionarCompra(10, 30.00m); 
+
+        Action acao = () => custodia.RegistrarVenda(11, 35.00m);
+
+        acao.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Saldo insuficiente*");
+    }
+
+    [Fact(DisplayName = "Não deve permitir adicionar compra com preço ou quantidade negativa")]
+    public void AdicionarCompra_ValoresNegativos_DeveLancarExcecao()
+    {
+        var custodia = new CustodiaFilhote(Guid.NewGuid(), "VALE3");
+
+        Action actQtd = () => custodia.AdicionarCompra(-1, 50m);
+        actQtd.Should().Throw<ArgumentException>()
+              .WithMessage("*quantidade deve ser maior que zero*");
+
+        Action actPreco = () => custodia.AdicionarCompra(10, -5m);
+        actPreco.Should().Throw<ArgumentException>()
+                .WithMessage("*preço deve ser maior que zero*");
+    }
 }
