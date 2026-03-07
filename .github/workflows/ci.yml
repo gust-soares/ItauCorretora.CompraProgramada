@@ -1,35 +1,46 @@
 name: CI/CD Pipeline - Itaú Corretora
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+push:
+branches: [ "main" ]
+pull_request:
+branches: [ "main" ]
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+build-and-test:
+runs-on: ubuntu-latest
 
-    steps:
-    - name: Baixar o código
-      uses: actions/checkout@v4
 
-    - name: Configurar o .NET 8
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+steps:
+- name: Baixar o código
+  uses: actions/checkout@v4
 
-    - name: Restaurar pacotes
-      run: dotnet restore
+- name: Configurar o .NET 8
+  uses: actions/setup-dotnet@v4
+  with:
+    dotnet-version: '8.0.x'
 
-    - name: Compilar a Solução
-      run: dotnet build --no-restore
+- name: Restaurar pacotes
+  run: dotnet restore
 
-    - name: Rodar os Testes com Coverage
-      run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage"
+- name: Compilar a solução
+  run: dotnet build --no-restore --configuration Release
 
-    - name: Upload Coverage Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: '**/coverage.cobertura.xml'
+- name: Rodar testes com cobertura
+  run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage"
+
+- name: Instalar ReportGenerator
+  run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+- name: Adicionar .NET tools ao PATH
+  run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+- name: Gerar relatório HTML de cobertura
+  run: reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coverage-report -reporttypes:Html
+
+- name: Upload relatório HTML
+  uses: actions/upload-artifact@v4
+  with:
+    name: coverage-report-html
+    path: coverage-report
+
