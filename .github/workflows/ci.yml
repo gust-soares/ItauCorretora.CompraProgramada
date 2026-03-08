@@ -39,7 +39,7 @@ jobs:
           /p:CollectCoverage=true 
           /p:CoverletOutputFormat=cobertura 
           /p:Include="[ItauCorretora.*]*"
-          /p:Exclude="[ItauCorretora.Tests]*"
+          /p:Exclude="[ItauCorretora.Tests]*,[*]*Migrations.*,[ItauCorretora.Infrastructure]ItauCorretora.Infrastructure.Data.*"
           /p:DeterministicSourcePaths=false
 
       - name: Install ReportGenerator
