@@ -1,4 +1,4 @@
-﻿using ItauCorretora.Application.Queries;
+﻿using ItauCorretora.Application.UseCases;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ItauCorretora.Api.Controllers;
@@ -7,21 +7,24 @@ namespace ItauCorretora.Api.Controllers;
 [Route("api/[controller]")]
 public class CarteiraController : ControllerBase
 {
-    private readonly ICarteiraQuery _carteiraQuery;
+    private readonly ObterPosicaoCarteiraUseCase _obterPosicaoUseCase;
 
-    public CarteiraController(ICarteiraQuery carteiraQuery)
+    public CarteiraController(ObterPosicaoCarteiraUseCase obterPosicaoUseCase)
     {
-        _carteiraQuery = carteiraQuery;
+        _obterPosicaoUseCase = obterPosicaoUseCase;
     }
 
     [HttpGet("{clienteId}/posicao")]
     public async Task<IActionResult> ObterPosicao(Guid clienteId)
     {
-        var posicao = await _carteiraQuery.ObterPosicaoClienteAsync(clienteId);
-
-        if (posicao == null)
-            return NotFound(new { Mensagem = "Cliente não encontrado ou sem posições na carteira." });
-
-        return Ok(posicao);
+        try
+        {
+            var posicao = await _obterPosicaoUseCase.ExecutarAsync(clienteId);
+            return Ok(posicao);
+        }
+        catch (Exception ex)
+        {
+            return NotFound(new { erro = ex.Message });
+        }
     }
 }

@@ -13,6 +13,7 @@ public class ProcessarRebalanceamentoUseCaseTests
     private readonly IClienteRepository _clienteRepoMock;
     private readonly IB3ParserService _b3ParserMock;
     private readonly IKafkaService _kafkaServiceMock;
+    private readonly ICestaRepository _cestaRepoMock; 
     private readonly ILogger<ProcessarRebalanceamentoUseCase> _loggerMock;
     private readonly ProcessarRebalanceamentoUseCase _useCase;
 
@@ -21,10 +22,11 @@ public class ProcessarRebalanceamentoUseCaseTests
         _clienteRepoMock = Substitute.For<IClienteRepository>();
         _b3ParserMock = Substitute.For<IB3ParserService>();
         _kafkaServiceMock = Substitute.For<IKafkaService>();
+        _cestaRepoMock = Substitute.For<ICestaRepository>(); 
         _loggerMock = Substitute.For<ILogger<ProcessarRebalanceamentoUseCase>>();
 
         _useCase = new ProcessarRebalanceamentoUseCase(
-            _clienteRepoMock, _b3ParserMock, _kafkaServiceMock, _loggerMock);
+            _clienteRepoMock, _b3ParserMock, _kafkaServiceMock, _cestaRepoMock, _loggerMock);
     }
 
     [Fact(DisplayName = "Deve vender ativo que saiu da cesta e calcular IR se lucro for superior a 20k")]
@@ -43,11 +45,12 @@ public class ProcessarRebalanceamentoUseCaseTests
         var precosMercado = new Dictionary<string, decimal> { { "VALE3", 50.00m } };
         _b3ParserMock.ParseCotacoesAsync(Arg.Any<string>()).Returns(precosMercado);
 
-        var novaCesta = new List<RecomendacaoAcao>();
+        var cestaVaziaFake = new CestaTopFive();
+        _cestaRepoMock.ObterAtualAsync().Returns(cestaVaziaFake);
 
-        await _useCase.ExecutarAsync("caminho_fake", novaCesta);
+        await _useCase.ExecutarAsync("caminho_fake");
 
-        await _clienteRepoMock.Received().AtualizarCustodiaAsync(contaFake.Id, "VALE3", 0, 0m);
+        await _clienteRepoMock.Received().AtualizarCustodiaAsync(contaFake.Id, "VALE3", 0, Arg.Any<decimal>());
 
         await _kafkaServiceMock.Received(1).EnviarEventoIRDedoDuro(Arg.Any<object>());
     }

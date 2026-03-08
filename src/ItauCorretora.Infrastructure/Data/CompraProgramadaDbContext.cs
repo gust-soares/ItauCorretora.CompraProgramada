@@ -10,6 +10,8 @@ public class CompraProgramadaDbContext : DbContext
     public DbSet<Cliente> Clientes { get; set; }
     public DbSet<ContaGrafica> ContasGraficas { get; set; }
     public DbSet<CustodiaFilhote> CustodiasFilhotes { get; set; }
+    public DbSet<CestaTopFive> CestasTopFive { get; set; }
+    public DbSet<ItemCesta> ItensCesta { get; set; }
 
     public CompraProgramadaDbContext(DbContextOptions<CompraProgramadaDbContext> options)
         : base(options) { }
@@ -50,5 +52,24 @@ public class CompraProgramadaDbContext : DbContext
 
             e.Property(c => c.PrecoMedio).HasPrecision(18, 4);
         });
+
+        modelBuilder.Entity<CestaTopFive>(e =>
+        {
+            e.ToTable("CestasTopFive");
+            e.HasKey(c => c.Id);
+
+            e.HasMany(c => c.Itens)
+             .WithOne()
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ItemCesta>(e =>
+        {
+            e.ToTable("ItensCesta");
+            e.HasKey(i => i.Id);
+            e.Property(i => i.Ticker).HasMaxLength(10).IsRequired();
+            e.Property(i => i.Percentual).HasPrecision(18, 2);
+        });
+
     }
 }

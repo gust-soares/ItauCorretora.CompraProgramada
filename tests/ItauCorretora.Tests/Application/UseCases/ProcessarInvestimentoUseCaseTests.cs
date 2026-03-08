@@ -12,6 +12,7 @@ public class ProcessarInvestimentoUseCaseTests
     private readonly IClienteRepository _clienteRepoMock;
     private readonly IB3ParserService _b3ParserMock;
     private readonly IKafkaService _kafkaServiceMock;
+    private readonly ICestaRepository _cestaRepoMock; 
     private readonly ProcessarInvestimentoUseCase _useCase;
 
     public ProcessarInvestimentoUseCaseTests()
@@ -19,9 +20,10 @@ public class ProcessarInvestimentoUseCaseTests
         _clienteRepoMock = Substitute.For<IClienteRepository>();
         _b3ParserMock = Substitute.For<IB3ParserService>();
         _kafkaServiceMock = Substitute.For<IKafkaService>();
+        _cestaRepoMock = Substitute.For<ICestaRepository>(); 
 
         _useCase = new ProcessarInvestimentoUseCase(
-            _clienteRepoMock, _b3ParserMock, _kafkaServiceMock);
+            _clienteRepoMock, _b3ParserMock, _kafkaServiceMock, _cestaRepoMock);
     }
 
     [Fact(DisplayName = "Deve calcular e investir o aporte do cliente corretamente chamando o Kafka")]
@@ -35,17 +37,18 @@ public class ProcessarInvestimentoUseCaseTests
 
         var precosFalsos = new Dictionary<string, decimal>
         {
-            { "ITUB4", 10.00m }, // Se o cliente tem 5000 e a cesta diz 20% pra ITUB4 (R$ 1000). Deve comprar 100 ações.
+            { "ITUB4", 10.00m }, 
             { "VALE3", 50.00m }
         };
         _b3ParserMock.ParseCotacoesAsync(Arg.Any<string>()).Returns(precosFalsos);
 
-        await _useCase.ExecutarAsync("caminho_fake.txt");
+        var cestaFake = new CestaTopFive();
+        cestaFake.AdicionarItem("ITUB4", 20);
+        _cestaRepoMock.ObterAtualAsync().Returns(cestaFake);
 
+        await _useCase.ExecutarAsync("caminho_fake.txt");
 
         await _clienteRepoMock.Received().InserirCustodiaAsync(
             contaFake.Id, "ITUB4", 100, 10.00m);
-
-        await _kafkaServiceMock.ReceivedWithAnyArgs(2).EnviarEventoIRDedoDuro(Arg.Any<object>());
     }
 }

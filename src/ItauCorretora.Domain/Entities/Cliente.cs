@@ -45,4 +45,17 @@ public class Cliente
     {
         Ativo = false;
     }
+
+    public void AlterarAporteMensal(decimal novoValor)
+    {
+        if (novoValor <= 0)
+            throw new Exception("O valor de aporte deve ser maior que zero.");
+
+        this.ValorMensalAporte = novoValor;
+    }
+
+    public void DesativarAdesao()
+    {
+        this.Ativo = false;
+    }
 }

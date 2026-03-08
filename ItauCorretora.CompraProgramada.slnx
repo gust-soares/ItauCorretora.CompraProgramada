@@ -1,8 +1,10 @@
-<Solution>
+ <Solution>
   <Folder Name="/cotacoes/">
-    <File Path="ItauCorretora.Infrastructure/Data/COTAHIST_D05032026.TXT" />
+    <File Path="cotacoes/COTAHIST_D05032026.TXT" />
+    <File Path="cotacoes/COTAHIST_D06032026.TXT" />
   </Folder>
   <Folder Name="/Itens de Solução/">
+    <File Path=".dockerignore" />
     <File Path="docker-compose.yml" />
   </Folder>
   <Folder Name="/src/">

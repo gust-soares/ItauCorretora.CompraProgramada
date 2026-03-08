@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ItauCorretora.Infrastructure.Services
@@ -18,31 +19,56 @@ namespace ItauCorretora.Infrastructure.Services
             _directoryPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, relativePath));
         }
 
-        public async Task<Dictionary<string, decimal>> ParseCotacoesAsync(string folderPath = null)
+        public async Task<Dictionary<string, decimal>> ParseCotacoesAsync(string pathParaUsar = null)
         {
-            var mapaCotacoes = new Dictionary<string, decimal>();
-            var pathParaUsar = folderPath ?? _directoryPath;
+            var mapaCotacoes = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
 
-            if (!Directory.Exists(pathParaUsar))
+            var targetPath = pathParaUsar ?? _directoryPath;
+
+            List<string> arquivosParaProcessar = new();
+
+            if (File.Exists(targetPath))
+            {
+                arquivosParaProcessar.Add(targetPath);
+            }
+            else if (Directory.Exists(targetPath))
+            {
+                var arquivos = Directory.GetFiles(targetPath, "COTAHIST_*.TXT")
+                                        .OrderBy(f => f)
+                                        .ToList();
+                arquivosParaProcessar.AddRange(arquivos);
+            }
+            else
+            {
                 return mapaCotacoes;
+            }
 
-            var arquivos = Directory.GetFiles(pathParaUsar, "COTAHIST_*.TXT");
-
-            foreach (var caminhoArquivo in arquivos)
+            foreach (var caminhoArquivo in arquivosParaProcessar)
             {
                 var linhas = await File.ReadAllLinesAsync(caminhoArquivo);
 
                 for (int i = 1; i < linhas.Length - 1; i++)
                 {
                     var linha = linhas[i];
+
+                    if (linha.Length < 121) continue;
+
                     try
                     {
                         string ticker = linha.Substring(12, 12).Trim();
-                        decimal preco = decimal.Parse(linha.Substring(108, 13), CultureInfo.InvariantCulture) / 100m;
 
-                        mapaCotacoes[ticker] = preco;
+                        string precoBruto = linha.Substring(108, 13);
+                        decimal preco = decimal.Parse(precoBruto, CultureInfo.InvariantCulture) / 100m;
+
+                        if (!string.IsNullOrWhiteSpace(ticker))
+                        {
+                            mapaCotacoes[ticker] = preco;
+                        }
                     }
-                    catch { /* Linha malformada, ignora e segue */ }
+                    catch
+                    {
+                        continue;
+                    }
                 }
             }
 

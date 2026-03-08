@@ -35,11 +35,12 @@ jobs:
           dotnet test tests/ItauCorretora.Tests/ItauCorretora.Tests.csproj 
           --configuration Release 
           --collect:"XPlat Code Coverage" 
-          --results-directory ./tests/ItauCorretora.Tests/TestResults
+          --results-directory ./TestResults
           /p:CollectCoverage=true 
           /p:CoverletOutputFormat=cobertura 
-          /p:Include="[ItauCorretora.Infrastructure]*" 
-          /p:CopyLocalLockFileAssemblies=true
+          /p:Include="[ItauCorretora.*]*"
+          /p:Exclude="[ItauCorretora.Tests]*"
+          /p:DeterministicSourcePaths=false
 
       - name: Install ReportGenerator
         run: dotnet tool install -g dotnet-reportgenerator-globaltool

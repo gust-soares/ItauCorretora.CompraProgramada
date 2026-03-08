@@ -1,5 +1,4 @@
 ﻿using ItauCorretora.Application.UseCases;
-using ItauCorretora.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ItauCorretora.Api.Controllers;
@@ -8,11 +7,15 @@ namespace ItauCorretora.Api.Controllers;
 [Route("api/[controller]")]
 public class ProcessamentoController : ControllerBase
 {
-    private readonly ProcessarInvestimentoUseCase _useCase;
+    private readonly ProcessarInvestimentoUseCase _investimentoUseCase;
+    private readonly ProcessarRebalanceamentoUseCase _rebalanceamentoUseCase; 
 
-    public ProcessamentoController(ProcessarInvestimentoUseCase useCase)
+    public ProcessamentoController(
+        ProcessarInvestimentoUseCase investimentoUseCase,
+        ProcessarRebalanceamentoUseCase rebalanceamentoUseCase)
     {
-        _useCase = useCase;
+        _investimentoUseCase = investimentoUseCase;
+        _rebalanceamentoUseCase = rebalanceamentoUseCase;
     }
 
     [HttpPost("executar-investimento-mensal")]
@@ -23,8 +26,7 @@ public class ProcessamentoController : ControllerBase
             if (!System.IO.File.Exists(caminhoArquivoB3))
                 return BadRequest(new { erro = "Arquivo da B3 não encontrado no caminho especificado." });
 
-            await _useCase.ExecutarAsync(caminhoArquivoB3);
-
+            await _investimentoUseCase.ExecutarAsync(caminhoArquivoB3);
             return Ok(new { mensagem = "Processamento de investimentos concluído com sucesso!" });
         }
         catch (Exception ex)
@@ -34,22 +36,20 @@ public class ProcessamentoController : ControllerBase
     }
 
     [HttpPost("executar-rebalanceamento")]
-    public async Task<IActionResult> ExecutarRebalanceamento(
-        [FromServices] ProcessarRebalanceamentoUseCase useCase)
+    public async Task<IActionResult> ExecutarRebalanceamento(string caminhoArquivoB3)
     {
-        var novaCesta = new List<RecomendacaoAcao>
+        try
         {
-            new("YDUQ3T", 0.10m), // Caiu de 20% para 10%
-            new("WIZC3T", 0.20m),
-            new("WHRL4T", 0.20m),
-            new("ITUB4",  0.30m), // Subiu de 20% para 30%
-            new("PETR4",  0.20m)  // Nova ação
-        };
+            if (!System.IO.File.Exists(caminhoArquivoB3))
+                return BadRequest(new { erro = "Arquivo da B3 não encontrado no caminho especificado." });
 
-        string caminhoArquivo = @"C:\Users\gusta\source\repos\ItauCorretora.CompraProgramada\ItauCorretora.Infrastructure\Data\COTAHIST_D05032026.TXT";
+            await _rebalanceamentoUseCase.ExecutarAsync(caminhoArquivoB3);
 
-        await useCase.ExecutarAsync(caminhoArquivo, novaCesta);
-
-        return Ok(new { Mensagem = "Rebalanceamento e Apuração de IR executados com sucesso!" });
+            return Ok(new { mensagem = "Rebalanceamento e Apuração de IR executados com sucesso!" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { erro = $"Falha no rebalanceamento: {ex.Message}" });
+        }
     }
 }

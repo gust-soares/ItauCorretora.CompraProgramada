@@ -10,9 +10,6 @@ using Serilog;
 using Serilog.Formatting.Json;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using ItauCorretora.Application.Queries;
 using ItauCorretora.Infrastructure.Queries;
 
@@ -32,18 +29,17 @@ try
 
     builder.Services.AddScoped<ICarteiraQuery, CarteiraQuery>();
     builder.Services.AddControllers();
-    builder.Services.AddScoped<IB3ParserService, B3ParserService>();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    string connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Server=localhost;Database=compra_programada_db;Uid=root;Pwd=rootpassword;";
+    string connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Server=mysql;Database=compra_programada_db;Uid=root;Pwd=rootpassword;";
 
     builder.Services.AddDbContext<CompraProgramadaDbContext>(options =>
-        options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+        options.UseMySql(connectionString, ServerVersion.Parse("8.0.33-mysql")));
 
     builder.Services.AddHealthChecks()
         .AddMySql(connectionString, name: "banco-de-dados-mysql")
-        .AddKafka(setup => setup.BootstrapServers = "localhost:9092", name: "mensageria-kafka");
+        .AddKafka(setup => setup.BootstrapServers = "kafka:9092", name: "mensageria-kafka");
 
     builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
     builder.Services.AddScoped<AderirProdutoUseCase>();
@@ -51,6 +47,11 @@ try
     builder.Services.AddScoped<ProcessarInvestimentoUseCase>();
     builder.Services.AddScoped<IKafkaService, KafkaProducerService>();
     builder.Services.AddScoped<ProcessarRebalanceamentoUseCase>();
+    builder.Services.AddScoped<AlterarValorAporteUseCase>();
+    builder.Services.AddScoped<CancelarAdesaoUseCase>();
+    builder.Services.AddScoped<ICestaRepository, CestaRepository>();
+    builder.Services.AddScoped<IKafkaService, KafkaService>();
+    builder.Services.AddScoped<ObterPosicaoCarteiraUseCase>();
 
     var app = builder.Build();
 
@@ -69,16 +70,16 @@ try
         }
     }
 
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
-
     app.UseDefaultFiles();
     app.UseStaticFiles();
 
-    app.UseHttpsRedirection();
+    app.UseSwagger();
+    app.UseSwaggerUI(c => {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Itau Corretora API v1");
+        //c.RoutePrefix = string.Empty;
+    });
+
+
     app.UseAuthorization();
     app.MapControllers();
 
@@ -95,5 +96,5 @@ catch (Exception ex)
 }
 finally
 {
-    Log.CloseAndFlush(); 
+    Log.CloseAndFlush();
 }

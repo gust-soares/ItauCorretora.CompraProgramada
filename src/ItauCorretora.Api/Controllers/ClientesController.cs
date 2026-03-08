@@ -41,4 +41,37 @@ public class ClientesController : ControllerBase
             return BadRequest(new { erro = ex.Message });
         }
     }
+
+    [HttpPut("{id}/valor-aporte")]
+    public async Task<IActionResult> AlterarValorAporte(
+    Guid id,
+    [FromBody] decimal novoValor,
+    [FromServices] AlterarValorAporteUseCase useCase)
+    {
+        try
+        {
+            await useCase.Executar(id, novoValor);
+            return Ok(new { Mensagem = "Valor mensal de aporte alterado com sucesso." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Erro = ex.Message });
+        }
+    }
+
+    [HttpPost("{id}/cancelar")]
+    public async Task<IActionResult> CancelarAdesao(
+        Guid id,
+        [FromServices] CancelarAdesaoUseCase useCase)
+    {
+        try
+        {
+            await useCase.Executar(id);
+            return Ok(new { Mensagem = "Adesão cancelada. O cliente não receberá novas compras mensais, mas a custódia foi mantida." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Erro = ex.Message });
+        }
+    }
 }

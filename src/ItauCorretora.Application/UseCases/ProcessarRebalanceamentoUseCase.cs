@@ -9,23 +9,33 @@ public class ProcessarRebalanceamentoUseCase
     private readonly IClienteRepository _clienteRepo;
     private readonly IB3ParserService _b3Parser;
     private readonly IKafkaService _kafkaService;
+    private readonly ICestaRepository _cestaRepo; 
     private readonly ILogger<ProcessarRebalanceamentoUseCase> _logger;
 
     public ProcessarRebalanceamentoUseCase(
         IClienteRepository clienteRepo,
         IB3ParserService b3Parser,
         IKafkaService kafkaService,
+        ICestaRepository cestaRepo, 
         ILogger<ProcessarRebalanceamentoUseCase> logger)
     {
         _clienteRepo = clienteRepo;
         _b3Parser = b3Parser;
         _kafkaService = kafkaService;
+        _cestaRepo = cestaRepo;
         _logger = logger;
     }
 
-    public async Task ExecutarAsync(string caminhoArquivoB3, List<RecomendacaoAcao> novaCesta)
+    public async Task ExecutarAsync(string caminhoArquivoB3)
     {
-        _logger.LogInformation("Iniciando processamento de rebalanceamento. Arquivo: {Caminho}", caminhoArquivoB3);
+        _logger.LogInformation("Iniciando rebalanceamento dinâmico. Arquivo: {Caminho}", caminhoArquivoB3);
+
+        var cestaAtual = await _cestaRepo.ObterAtualAsync();
+        if (cestaAtual == null)
+        {
+            _logger.LogError("Falha: Nenhuma Cesta Top Five cadastrada no sistema.");
+            return;
+        }
 
         var precosMercado = await _b3Parser.ParseCotacoesAsync(caminhoArquivoB3);
         var clientes = await _clienteRepo.ListarAtivosAsync();
@@ -51,8 +61,8 @@ public class ProcessarRebalanceamentoUseCase
             {
                 if (!precosMercado.TryGetValue(item.Ticker, out decimal precoAtual)) continue;
 
-                var recomendacao = novaCesta.FirstOrDefault(c => c.Ticker == item.Ticker);
-                decimal pesoAlvo = recomendacao?.Percentual ?? 0m;
+                var recomendacao = cestaAtual.Itens.FirstOrDefault(c => c.Ticker == item.Ticker);
+                decimal pesoAlvo = (recomendacao?.Percentual ?? 0m) / 100m; 
 
                 decimal valorAlvo = patrimonioProjetado * pesoAlvo;
                 decimal valorAtual = item.Quantidade * precoAtual;
@@ -70,8 +80,7 @@ public class ProcessarRebalanceamentoUseCase
 
                         await _clienteRepo.AtualizarCustodiaAsync(cliente.ContaGrafica.Id, item.Ticker, item.Quantidade, item.PrecoMedio);
 
-                        _logger.LogInformation("Venda executada: {Quantidade} cotas de {Ticker} para o cliente {Cliente}",
-                            qtdParaVender, item.Ticker, cliente.Nome);
+                        _logger.LogInformation("[VENDA] {Ticker}: {Qtd} cotas para {Cliente}", item.Ticker, qtdParaVender, cliente.Nome);
                     }
                 }
             }
@@ -79,20 +88,15 @@ public class ProcessarRebalanceamentoUseCase
             if (totalVendasMes > 20000m && lucroTotalMes > 0m)
             {
                 decimal valorImposto = lucroTotalMes * 0.20m;
-
-                var eventoIr = new { Cpf = cliente.Cpf, Nome = cliente.Nome, ValorImposto = valorImposto };
-                await _kafkaService.EnviarEventoIRDedoDuro(eventoIr);
-
-                _logger.LogWarning("Evento de IR enviado ao Kafka para o cliente {Cliente}. Valor: {Imposto}",
-                    cliente.Nome, valorImposto);
+                await _kafkaService.EnviarEventoIRDedoDuro(new { Cpf = cliente.Cpf, Nome = cliente.Nome, Imposto = valorImposto });
             }
 
-            foreach (var acao in novaCesta)
+            foreach (var itemCesta in cestaAtual.Itens)
             {
-                if (!precosMercado.TryGetValue(acao.Ticker, out decimal precoAtual)) continue;
+                if (!precosMercado.TryGetValue(itemCesta.Ticker, out decimal precoAtual)) continue;
 
-                var itemCustodia = custodiaAtual.FirstOrDefault(c => c.Ticker == acao.Ticker);
-                decimal valorAlvo = patrimonioProjetado * acao.Percentual;
+                var itemCustodia = custodiaAtual.FirstOrDefault(c => c.Ticker == itemCesta.Ticker);
+                decimal valorAlvo = patrimonioProjetado * (itemCesta.Percentual / 100m);
                 decimal valorAtual = (itemCustodia?.Quantidade ?? 0) * precoAtual;
 
                 if (valorAtual < valorAlvo)
@@ -109,15 +113,13 @@ public class ProcessarRebalanceamentoUseCase
                         }
                         else
                         {
-                            await _clienteRepo.InserirCustodiaAsync(cliente.ContaGrafica.Id, acao.Ticker, qtdParaComprar, precoAtual);
+                            await _clienteRepo.InserirCustodiaAsync(cliente.ContaGrafica.Id, itemCesta.Ticker, qtdParaComprar, precoAtual);
                         }
-                        _logger.LogInformation("Compra executada: {Quantidade} cotas de {Ticker} para o cliente {Cliente}",
-                            qtdParaComprar, acao.Ticker, cliente.Nome);
+                        _logger.LogInformation("[COMPRA] {Ticker}: {Qtd} cotas para {Cliente}", itemCesta.Ticker, qtdParaComprar, cliente.Nome);
                     }
                 }
             }
         }
-
-        _logger.LogInformation("Rebalanceamento finalizado com sucesso.");
+        _logger.LogInformation("Rebalanceamento dinâmico concluído.");
     }
 }
