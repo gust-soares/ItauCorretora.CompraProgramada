@@ -2,13 +2,16 @@
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+
 namespace ItauCorretora.Infrastructure.Services
 {
+    
     public class B3ParserService : IB3ParserService
     {
         private readonly string _directoryPath;

@@ -40,4 +40,14 @@ public class ClienteTests
         cliente.ContaGrafica.Should().NotBeNull();
         cliente.ContaGrafica.Id.Should().Be(conta.Id);
     }
+
+    [Fact(DisplayName = "Deve alterar o valor do aporte mensal corretamente")]
+    public void AlterarValorAporte_ValorValido_DeveAtualizar()
+    {
+        var cliente = new Cliente("Gustavo", "11122233344", "gustavo@email.com", 5000m);
+
+        cliente.AlterarValorAporte(7500m);
+
+        cliente.ValorMensalAporte.Should().Be(7500m);
+    }
 }

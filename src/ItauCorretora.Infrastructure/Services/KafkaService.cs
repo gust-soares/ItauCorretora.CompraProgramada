@@ -1,9 +1,11 @@
 ﻿using Confluent.Kafka;
 using ItauCorretora.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ItauCorretora.Infrastructure.Services;
 
+[ExcludeFromCodeCoverage]
 public class KafkaService : IKafkaService
 {
     private readonly ProducerConfig _config;

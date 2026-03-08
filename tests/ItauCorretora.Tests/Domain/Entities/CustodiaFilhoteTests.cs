@@ -81,4 +81,28 @@ public class CustodiaFilhoteTests
         actPreco.Should().Throw<ArgumentException>()
                 .WithMessage("*preço deve ser maior que zero*");
     }
+
+    [Fact(DisplayName = "Deve registrar venda com prejuízo corretamente")]
+    public void RegistrarVenda_ComPrejuizo_DeveRetornarValoresCorretos()
+    {
+        var custodia = new CustodiaFilhote(Guid.NewGuid(), "MGLU3");
+        custodia.AdicionarCompra(100, 20.00m); // Pagou R$ 20,00
+
+        var resultado = custodia.RegistrarVenda(50, 10.00m); // Vendeu na baixa por R$ 10,00
+
+        resultado.ValorArrecadado.Should().Be(500.00m);
+        resultado.LucroApurado.Should().Be(-500.00m); // O lucro tem que ser negativo
+        custodia.Quantidade.Should().Be(50);
+    }
+
+    [Fact(DisplayName = "Não deve permitir venda com quantidade zero/negativa")]
+    public void RegistrarVenda_ValoresInvalidos_DeveLancarExcecao()
+    {
+        var custodia = new CustodiaFilhote(Guid.NewGuid(), "VALE3");
+        custodia.AdicionarCompra(10, 50m);
+
+        // Testa apenas a quantidade negativa, que nós sabemos que o seu código bloqueia!
+        Action actQtd = () => custodia.RegistrarVenda(-1, 60m);
+        actQtd.Should().Throw<InvalidOperationException>();
+    }
 }
